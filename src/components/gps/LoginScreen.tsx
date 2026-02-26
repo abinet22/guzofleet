@@ -210,20 +210,18 @@ const LoginScreen: React.FC = () => {
 
           {/* Server info */}
           <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-            <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Server</p>
-            <p className="text-xs font-mono text-gray-900 dark:text-white">gps.waltapharmaceuticals.pro.et</p>
-            <p className="text-[10px] text-gray-400 mt-1">
-              Use your Traccar account credentials to sign in
+             <p className="text-[10px] text-gray-400 mt-1">
+              Use your account credentials to sign in
             </p>
           </div>
 
           {/* Footer */}
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-400 dark:text-gray-500">
-              Powered by Traccar GPS Platform
+              Powered by Vertex Innovations
             </p>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              Walta Pharmaceuticals Fleet Management
+              Walta Fleet Management
             </p>
           </div>
         </div>
