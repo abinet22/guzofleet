@@ -19,11 +19,23 @@ const getEnv = (key: string, fallback: string): string => {
 const BASE_URL = getEnv('VITE_TRACCAR_BASE_URL', 'https://gps.waltapharmaceuticals.pro.et').trim();
 const API = BASE_URL.startsWith('http') ? `${BASE_URL}/api` : BASE_URL;
 
+// In your traccarApi.ts - Update getWsUrl function
 const getWsUrl = (): string => {
   const wsUrl = getEnv('VITE_TRACCAR_WS_URL', '');
   if (wsUrl) return wsUrl;
+  
   const wsBase = BASE_URL.replace(/^http/, 'ws');
-  return `${wsBase}/api/socket`;
+  const baseUrl = `${wsBase}/api/socket`;
+  
+  // Get token from localStorage (Basic auth token)
+  const authHeader = getAuthHeader();
+  if (authHeader) {
+    // Extract token from "Basic xxx" format
+    const token = authHeader.replace('Basic ', '');
+    return `${baseUrl}?token=${encodeURIComponent(token)}`;
+  }
+  
+  return baseUrl;
 };
 
 const WS_URL = getWsUrl();
