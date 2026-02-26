@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"], // Add DOM libs for Mapbox/Capacitor
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "baseUrl": ".", // Helps resolve modules
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true, // Useful for Capacitor config
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    
+    /* Add this to suppress the Mapbox type errors */
+    "types": ["node"] 
+  },
+  "include": [
+    "src/**/*.ts", 
+    "src/**/*.tsx", 
+    "src/**/*.vue", 
+    "vite.config.ts", 
+    "capacitor.config.ts" // Add this!
+  ]
+}
