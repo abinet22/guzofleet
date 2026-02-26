@@ -22,6 +22,10 @@
     {
       "source": "/api/traccar/:path*",
       "destination": "https://gps.waltapharmaceuticals.pro.et/api/:path*"
+    },
+    {
+      "source": "/socket(.*)",
+      "destination": "wss://gps.waltapharmaceuticals.pro.et/api/socket$1"
     }
   ]
 }
