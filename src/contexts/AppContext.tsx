@@ -121,8 +121,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [wsConnected, setWsConnected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-
+  
+  // Polling for fallback when WebSocket fails
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const wsFailedRef = useRef(false);
   const initialLoadDone = useRef(false);
+
+  // ---- Polling fallback functions ----
+  const startPolling = useCallback(() => {
+    if (pollingIntervalRef.current) return;
+    
+    console.log('[AppContext] Starting polling fallback (WebSocket unavailable)');
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        const [devs, pos] = await Promise.all([fetchDevices(), fetchPositions()]);
+        setDevices(devs);
+        setPositions(pos);
+      } catch (err) {
+        console.warn('[AppContext] Polling refresh failed:', err);
+      }
+    }, 10000); // Poll every 10 seconds
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
 
   // ---- Auto-login: check existing session on mount ----
   useEffect(() => {
@@ -202,6 +228,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Reset state
+    wsFailedRef.current = false;
+    stopPolling();
+
     connectWebSocket({
       onPositions: (newPositions) => {
         setPositions(prev => {
@@ -220,16 +250,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       onEvents: (newEvents) => {
         setEvents(prev => [...newEvents, ...prev].slice(0, 200));
       },
-      onConnect: () => setWsConnected(true),
-      onDisconnect: () => setWsConnected(false),
-      onError: () => setWsConnected(false),
+      onConnect: () => {
+        setWsConnected(true);
+        wsFailedRef.current = false;
+        stopPolling();
+      },
+      onDisconnect: () => {
+        setWsConnected(false);
+        // Start polling if WebSocket disconnects
+        if (!wsFailedRef.current) {
+          wsFailedRef.current = true;
+          startPolling();
+        }
+      },
+      onError: () => {
+        setWsConnected(false);
+        // Start polling if WebSocket has error
+        if (!wsFailedRef.current) {
+          wsFailedRef.current = true;
+          startPolling();
+        }
+      },
     });
 
     return () => {
       disconnectWebSocket();
+      stopPolling();
       setWsConnected(false);
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, startPolling, stopPolling]);
 
   // ---- Login ----
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
@@ -257,6 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = useCallback(async () => {
     await logoutSession();
     disconnectWebSocket();
+    stopPolling();
     setIsAuthenticated(false);
     setUser(null);
     setDevices([]);
@@ -266,7 +316,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentView('dashboard');
     setSelectedDeviceId(null);
     initialLoadDone.current = false;
-  }, []);
+  }, [stopPolling]);
 
   // ---- Get device position ----
   const getDevicePositionFn = useCallback(
